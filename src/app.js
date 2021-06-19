@@ -3,6 +3,11 @@ const app = express();
 
 // TODO: Follow instructions in the checkpoint to implement ths API.
 const flips = require("./data/flips-data");
+const counts = require("./data/counts-data");
+
+app.use("/counts", (req, res) => {
+  res.json({ data: counts });
+});
 
 app.use("/flips/:flipId", (req, res, next) => {
   const { flipId } = req.params;
