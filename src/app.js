@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 
 const flipsRouter = require("./flips/flips.router");
+const countsRouter = require("./counts/counts.router");
 
 const flips = require("./data/flips-data");
 const counts = require("./data/counts-data");
@@ -19,9 +20,7 @@ app.use("/counts/:countId", (req, res, next) => {
   }
 });
 
-app.use("/counts", (req, res) => {
-  res.json({ data: counts });
-});
+app.use("/counts", countsRouter);
 
 app.use("/flips/:flipId", (req, res, next) => {
   const { flipId } = req.params;
