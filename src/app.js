@@ -1,7 +1,8 @@
 const express = require("express");
 const app = express();
 
-// TODO: Follow instructions in the checkpoint to implement ths API.
+const flipsRouter = require("./flips/flips.router");
+
 const flips = require("./data/flips-data");
 const counts = require("./data/counts-data");
 
@@ -12,7 +13,7 @@ app.use("/counts/:countId", (req, res, next) => {
   const foundCount = counts[countId];
 
   if (foundCount === undefined) {
-    next(`Count id not found: ${countId}`);
+    next({ status: 404, message: `Count id not found: ${countId}` });
   } else {
     res.json({ data: foundCount }); // Return a JSON object, not a number.
   }
@@ -29,29 +30,34 @@ app.use("/flips/:flipId", (req, res, next) => {
   if (foundFlip) {
     res.json({ data: foundFlip });
   } else {
-    next(`Flip id not found: ${flipId}`);
+    next({ status: 404, message: `Flip id not found: ${flipId}` });
   }
 });
 
-app.get("/flips", (req, res) => {
-  res.json({ data: flips });
-});
+app.use("/flips", flipsRouter);
+
+function bodyHasResultProperty(req, res, next) {
+  const { data: { result } = {} } = req.body;
+  if (result) {
+    return next(); // Call `next()` without an error message if the result exists
+  }
+  next({
+    status: 400,
+    message: "A 'result' property is required.",
+  });
+}
 
 let lastFlipId = flips.reduce((maxId, flip) => Math.max(maxId, flip.id), 0);
 
-app.post("/flips", (req, res, next) => {
+app.post("/flips", bodyHasResultProperty, (req, res, next) => {
   const { data: { result } = {} } = req.body;
-  if (result) {
-    const newFlip = {
-      id: ++lastFlipId, // Increment last ID, then assign as the current ID
-      result,
-    };
-    flips.push(newFlip);
-    counts[result] = counts[result] + 1; // Increment the counts
-    res.status(201).json({ data: newFlip });
-  } else {
-    res.sendStatus(400);
-  }
+  const newFlip = {
+    id: ++lastFlipId, // Increment last ID, then assign as the current ID
+    result,
+  };
+  flips.push(newFlip);
+  counts[result] = counts[result] + 1; // Increment the counts
+  res.status(201).json({ data: newFlip });
 });
 
 // Not found handler
@@ -60,9 +66,10 @@ app.use((request, response, next) => {
 });
 
 // Error handler
-app.use((error, request, response, next) => {
+app.use((error, req, res, next) => {
   console.error(error);
-  response.send(error);
+  const { status = 500, message = "Something went wrong!" } = error;
+  res.status(status).json({ error: message });
 });
 
 module.exports = app;
