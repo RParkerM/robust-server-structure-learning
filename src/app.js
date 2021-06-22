@@ -22,17 +22,6 @@ app.use("/counts/:countId", (req, res, next) => {
 
 app.use("/counts", countsRouter);
 
-app.use("/flips/:flipId", (req, res, next) => {
-  const { flipId } = req.params;
-  const foundFlip = flips.find((flip) => flip.id === Number(flipId));
-
-  if (foundFlip) {
-    res.json({ data: foundFlip });
-  } else {
-    next({ status: 404, message: `Flip id not found: ${flipId}` });
-  }
-});
-
 app.use("/flips", flipsRouter);
 
 // Not found handler
