@@ -30,6 +30,7 @@ function flipExists(req, res, next) {
   const { flipId } = req.params;
   const foundFlip = flips.find((flip) => flip.id === Number(flipId));
   if (foundFlip) {
+    res.locals.flip = foundFlip;
     return next();
   }
   next({
@@ -39,9 +40,7 @@ function flipExists(req, res, next) {
 }
 
 function read(req, res, next) {
-  const { flipId } = req.params;
-  const foundFlip = flips.find((flip) => flip.id === Number(flipId));
-  res.json({ data: foundFlip });
+  res.json({ data: res.locals.flip });
 }
 
 function create(req, res) {
@@ -56,18 +55,17 @@ function create(req, res) {
 }
 
 function update(req, res) {
-  const { flipId } = req.params;
-  const foundFlip = flips.find((flip) => flip.id === Number(flipId));
+  const flip = res.locals.flip;
 
-  const originalResult = foundFlip.result;
+  const originalResult = flip.result;
   const { data: { result } = {} } = req.body;
 
   if (originalResult !== result) {
-    foundFlip.result = result;
+    flip.result = result;
     counts[originalResult]--;
     counts[result]++;
   }
-  res.json({ data: foundFlip });
+  res.json({ data: flip });
 }
 
 function destroy(req, res) {
